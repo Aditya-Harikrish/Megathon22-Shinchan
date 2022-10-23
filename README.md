@@ -25,3 +25,9 @@ To run (with Python3):
 ```
 python main.py
 ```
+
+## Team Shinchan
+- [@Aditya-Harikrish](https://github.com/Aditya-Harikrish)
+- [@Vansh](https://github.com/VKohli17)
+- [@hardikgu23](https://github.com/hardikgu23)
+- [@Vidhi1109](https://github.com/Vidhi1109)
