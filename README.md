@@ -1,11 +1,12 @@
 # Megathon-22 Shinchan
 
 ## What is this?
-This repository contains a Python program to take an image as input, perform OCR to extract text from it, detect any particular language in it (or not), translate the text into English (or any other language of your choice), and overwrite the translated text in the image.
+This repository contains a Python program to take an image as input, perform OCR to extract text from it, detect any particular language in it (or not), translate the text into English (or any other language of your choice), and replace the original text in the image with the translated text as well as use TTS to read it out loud for the user in the target language.
 
-<!-- ![Original Image](img/12.jpeg) -->
-<img src="img/12.jpeg" alt="Original Image" width="400"/>
-<img src="img/12_output.jpg" alt="Original Image" width="400"/>
+<p align="center">
+    <img src="img/10.jpeg" alt="Original Image" width="400"/>
+    <img src="img/10_output.jpg" alt="Original Image" width="400"/>
+<p>
 
 For more details, please refer to the [full presentation](https://github.com/Aditya-Harikrish/Megathon22-Shinchan/blob/main/A_case_for_EVs_to_make_travels_more_accessible_removing_the_language_barrier_compressed.pdf)
 
