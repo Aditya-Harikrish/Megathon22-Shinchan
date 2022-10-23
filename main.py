@@ -1,6 +1,6 @@
 import os
-from icecream import ic
-import cv2
+import threading
+import cv2 as cv
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -11,7 +11,7 @@ credential_path = os.path.abspath("key.json")
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_path
 
 target_language = "hi"
-img_name = os.path.join("img", "12.jpeg")
+img_name = os.path.join("img", "10.jpeg")
 
 places = []
 distances = []
@@ -103,7 +103,7 @@ def detect_text(path):
                         dist = abs(y_mid - y_coord_place)
                         name = places[y_coords_places.index(y_coord_place)]
                 names_and_dists[name] = text.description
-                
+
                 # create a string of format 'name, dist kilometres'
                 string = f"{name}, {text.description} kilometres"
                 # print(string)
@@ -119,7 +119,7 @@ def detect_text(path):
 
 
 def create_rect_mask(image, name, x1, y1, x2, y2):
-    """ 
+    """
     Sets the background colour for the bounded boxes to be overwritten.
     """
     # get colour of pixel at x1, (y1+y2)/2
@@ -129,18 +129,18 @@ def create_rect_mask(image, name, x1, y1, x2, y2):
     colour = tuple([int(i) for i in colour])
 
     # draw filled rectangle of color on image
-    cv2.rectangle(image, (x1, y1), (x2, y2), colour, -1)
+    cv.rectangle(image, (x1, y1), (x2, y2), colour, -1)
 
     translated_name = names_and_translations[name]
 
     # save image
-    cv2.imwrite("temp.jpg", image)
+    cv.imwrite("output.jpg", image)
 
     return image
 
 
 def put_translation(image, name, x1, y1, x2, y2):
-    """ 
+    """
     Writes the translated text over the drawn boxes.
     """
     # this time the image is a numpy one
@@ -152,10 +152,10 @@ def put_translation(image, name, x1, y1, x2, y2):
     draw.text((x1, y1), translated_name, (255, 255, 255), font=font)
 
     # convert image back to opencv format
-    image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    image = cv.cvtColor(np.array(image), cv.COLOR_RGB2BGR)
 
     # save to temp file
-    cv2.imwrite("temp.jpg", image)
+    cv.imwrite("output.jpg", image)
     return image
 
 
@@ -182,45 +182,77 @@ def translate_text(text, target_lang=target_language):
     return result["translatedText"]
 
 
-def tts(text):
+def play_audio(text):
+    """
+    TTS
+    """
     from gtts import gTTS
     from playsound import playsound
 
     tts_obj = gTTS(text=text, lang=target_language, slow=False)
-    tts_obj.save("temp.mp3")
-    playsound(os.path.abspath("temp.mp3"))
-    os.remove("temp.mp3")
+    tts_obj.save("output.mp3")
+    playsound(os.path.abspath("output.mp3"))
+    os.remove("output.mp3")
 
 
-if __name__ == "__main__":
+def tts():
+    """
+    Run text-to-speech for all the translated sentences.
+    """
+    for sentence in translated_sentences:
+        play_audio(sentence)
 
-    texts = detect_text(img_name)
 
-    for sentence in to_translate:
-        translated_sent = translate_text(sentence)
-        translated_sentences.append(translated_sent)
-
-    for name in names_to_translate:
-        translated_name = translate_text(name)
-        names_and_translations[name] = translated_name
-
-    img = cv2.imread(img_name)
+def show_new_image():
+    """
+    Display the output image
+    """
+    img = cv.imread(img_name)
 
     for place in places:
         img2 = create_rect_mask(
             img, place, rect_x1[place], rect_y1[place], rect_x2[place], rect_y2[place]
         )
 
-    img2 = plt.imread("temp.jpg")
+    img2 = plt.imread("output.jpg")
     img2 = Image.fromarray(img2)
-
+    img3 = None
     for place in places:
         img3 = put_translation(
             img2, place, rect_x1[place], rect_y1[place], rect_x2[place], rect_y2[place]
         )
 
-    cv2.imshow("image", img3)
-    for sentence in translated_sentences:
-        tts(sentence)
-        
-    cv2.waitKey(0)
+    cv.imshow("image", img3)
+    cv.waitKey(0)
+
+
+def translate():
+    """
+    Translate all the text
+    """
+    for sentence in to_translate:
+        translated_sentences.append(translate_text(sentence))
+
+    for name in names_to_translate:
+        translated_name = translate_text(name)
+        names_and_translations[name] = translated_name
+
+
+def show_output():
+    """
+    Run TTS and display the output image concurrently.
+    """
+    thread1 = threading.Thread(target=tts)
+    thread1.start()
+
+    thread2 = threading.Thread(target=show_new_image)
+    thread2.start()
+
+    thread1.join()
+    thread2.join()
+
+
+if __name__ == "__main__":
+    texts = detect_text(img_name)
+    translate()
+    show_output()
